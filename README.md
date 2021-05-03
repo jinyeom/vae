@@ -1,2 +1,2 @@
-# vae
-PyTorch Lightning implementation of VAE for visual observation encoding
+# VAE
+This repository contiains PyTorch Lightning implementation of VAE for unsupervised encoding of visual observation. 
