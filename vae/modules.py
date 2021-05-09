@@ -1,9 +1,8 @@
 from typing import Tuple
 
-import torch
-from torch import Tensor, nn, optim
-from torch.nn import functional as F
-import pytorch_lightning as pl
+import torch.nn as nn
+
+from .utils import softclip, gaussian_nll
 
 
 class Encoder(nn.Module):
@@ -48,16 +47,6 @@ class Decoder(nn.Module):
         return x
 
 
-def softclip(tensor: Tensor, min_value: float) -> Tensor:
-    return min_value + F.softplus(tensor - min_value)
-
-
-def gaussian_nll(mu: Tensor, log_sigma: Tensor, x: Tensor) -> Tensor:
-    log_a = log_sigma + 0.5 * np.log(2 * np.pi)
-    sigma = log_sigma.exp()
-    return log_a + 0.5 * torch.pow((x - mu) / sigma, 2)
-
-
 class ReconLoss(nn.Module):
     def forward(self, pred: Tensor, targ: Tensor) -> Tensor:
         log_sigma = (targ - pred).pow(2).mean(keepdim=True).sqrt().log()
@@ -69,40 +58,4 @@ class ReconLoss(nn.Module):
 class LatentLoss(nn.Module):
     def forward(self, mu: Tensor, logvar: Tensor) -> Tensor:
         loss = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-        return loss
-
-
-class VAE(pl.LightningModule):
-    def __init__(self, lr: float) -> None:
-        super().__init__()
-        self.z_dim = z_dim
-        self.lr = lr
-        self.save_hyperparameters()
-        self.encoder = Encoder(z_dim)
-        self.decoder = Decoder(z_dim)
-        self.recon_loss = ReconLoss()
-        self.latent_loss = LatentLoss()
-
-    def forward(self, x: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        mu, logvar = self.encoder(x)
-        sigma = torch.exp(0.5 * logvar)
-        eps = torch.randn_like(sigma)
-        z = mu + sigma * eps
-        recon_x = self.decoder(z)
-        return recon_x, mu, logvar
-
-    def configure_optimizers(self) -> optim.Adam:
-        return optim.Adam(self.parameters(), lr=self.lr)
-
-    def training_step(self, batch: Tensor, batch_idx: int) -> Tensor:
-        recon, mu, logvar = self.forward(batch)
-
-        recon_loss = self.recon_loss(recon, batch)
-        latent_loss = self.latent_loss(mu, logvar)
-        loss = recon_loss + latent_loss
-
-        self.log("recon_loss", recon_loss.item())
-        self.log("latent_loss", latent_loss.item())
-        self.log("training_loss", loss.item())
-
         return loss
