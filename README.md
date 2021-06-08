@@ -2,11 +2,11 @@
 
 # vae
 
-**PyTorch Lightning implementation of σ-VAE**
+**PyTorch Lightning implementation of Variational AutoEncoder (VAE)**
 
 </div>
 
-This repository contains PyTorch Lightning implementation of [σ-VAE](https://arxiv.org/abs/2006.13202) (variational autoencoder with a calibrated decoder) for encoding of visual observations with unsupervised learning. For more technical details, check out the papers listed in [references](#references).
+This repository contains PyTorch Lightning implementation of VAE for encoding of visual observations with unsupervised learning. For more technical details, check out the papers listed in [references](#references).
 
 ## Requirements
 - [PyTorch](https://pytorch.org/)
